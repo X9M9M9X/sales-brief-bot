@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Call Brief</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+.card { background: white; border-radius: 12px; padding: 2rem; max-width: 580px; width: 100%; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { font-size: 14px; color: #888; margin-bottom: 1.5rem; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { margin-bottom: 12px; }
+label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+input, textarea, select { width: 100%; padding: 8px 10px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 14px; outline: none; }
+input:focus, textarea:focus, select:focus { border-color: #333; }
+textarea { min-height: 80px; resize: vertical; }
+button { width: 100%; padding: 10px; background: #111; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 4px; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.brief { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; display: none; }
+.section { margin-bottom: 1rem; }
+.section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #999; margin-bottom: 4px; }
+.section-content { font-size: 14px; color: #222; line-height: 1.6; }
+.status { font-size: 13px; color: #888; text-align: center; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Sales call brief</h1>
+  <p class="subtitle">Enter lead details to generate a pre-call brief</p>
+
+  <div class="grid">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="name" placeholder="Arjun Mehta" />
+    </div>
+    <div class="form-group">
+      <label>Company</label>
+      <input type="text" id="company" placeholder="Freshworks" />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Work email</label>
+    <input type="email" id="email" placeholder="arjun@freshworks.com" />
+  </div>
+
+  <div class="form-group">
+    <label>Pipeline stage</label>
+    <select id="stage">
+      <option>Discovery Call</option>
+      <option>Proposal Sent</option>
+      <option>Negotiation</option>
+      <option>New Lead</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Last conversation notes</label>
+    <textarea id="notes" placeholder="e.g. Discussed pricing, team of 50, VP of Operations is the decision maker..."></textarea>
+  </div>
+
+  <button id="btn" onclick="generate()">Generate brief</button>
+  <div class="status" id="status"></div>
+
+  <div class="brief" id="brief">
+    <div class="section"><div class="section-label">Who you are talking to</div><div class="section-content" id="who"></div></div>
+    <div class="section"><div class="section-label">What their company does</div><div class="section-content" id="company-out"></div></div>
+    <div class="section"><div class="section-label">Likely pain points</div><div class="section-content" id="pain"></div></div>
+    <div class="section"><div class="section-label">Talking points</div><div class="section-content" id="talking"></div></div>
+    <div class="section"><div class="section-label">One thing to watch out for</div><div class="section-content" id="watch"></div></div>
+  </div>
+</div>
+
+<script>
+async function generate() {
+  const name = document.getElementById('name').value.trim();
+  const company = document.getElementById('company').value.trim();
+  if (!name || !company) { document.getElementById('status').textContent = 'Please enter name and company.'; return; }
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  document.getElementById('status').textContent = 'Generating...';
+  document.getElementById('brief').style.display = 'none';
+  try {
+    const res = await fetch('/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name, company,
+        email: document.getElementById('email').value,
+        stage: document.getElementById('stage').value,
+        notes: document.getElementById('notes').value
+      })
+    });
+    const d = await res.json();
+    document.getElementById('who').textContent = d.who;
+    document.getElementById('company-out').textContent = d.company;
+    document.getElementById('pain').innerHTML = d.pain_points.replace(/\n/g, '<br>');
+    document.getElementById('talking').innerHTML = d.talking_points.replace(/\n/g, '<br>');
+    document.getElementById('watch').textContent = d.watch_out;
+    document.getElementById('brief').style.display = 'block';
+    document.getElementById('status').textContent = '';
+  } catch(e) {
+    document.getElementById('status').textContent = 'Something went wrong. Try again.';
+  }
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
