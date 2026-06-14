@@ -59,8 +59,8 @@ async function generate() {
     const d = await res.json();
     document.getElementById('who').textContent = d.who;
     document.getElementById('company-out').textContent = d.company;
-    document.getElementById('pain').innerHTML = d.pain_points.replace(/\n/g, '<br>');
-    document.getElementById('talking').innerHTML = d.talking_points.replace(/\n/g, '<br>');
+    document.getElementById('pain').innerHTML = Array.isArray(d.pain_points) ? d.pain_points.map(p => '• ' + p).join('<br>') : d.pain_points;
+document.getElementById('talking').innerHTML = Array.isArray(d.talking_points) ? d.talking_points.map(p => '• ' + p).join('<br>') : d.talking_points;
     document.getElementById('watch').textContent = d.watch_out;
     document.getElementById('brief').style.display = 'block';
     document.getElementById('status').textContent = '';
