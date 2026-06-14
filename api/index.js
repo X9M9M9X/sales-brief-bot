@@ -30,8 +30,14 @@ Return ONLY a JSON object with exactly these keys:
     body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }] })
   });
   const data = await response.json();
-  const text = data.choices[0].message.content.replace(/```json|```/g, '').trim();
-  res.json(JSON.parse(text));
+try {
+    const text = data.choices[0].message.content.replace(/```json|```/g, '').trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const brief = JSON.parse(jsonMatch[0]);
+    res.json(brief);
+  } catch (err) {
+    res.status(500).json({ error: 'Parse error', raw: data.choices[0].message.content });
+  }
 });
 
 module.exports = app;
